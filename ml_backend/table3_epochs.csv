@@ -1,0 +1,6 @@
+Model,Train_Time,Epochs,Test_Acc
+LogisticRegression,29.78s,1000 iterations,81.0%
+SVM,4.14s,1000 iterations,98.5%
+DecisionTree,1.78s,1 epoch (greedy),98.5%
+RandomForest,38.82s,500 epochs (trees),100.0%
+KNN,2.76s,0 epochs (lazy),94.6%

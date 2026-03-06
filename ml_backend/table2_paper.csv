@@ -1,0 +1,6 @@
+Model,Best_Params,Train_Acc,Test_Acc,Precision,Recall,F1,AUC
+LogisticRegression,{'clf__C': 10},84.6%,81.0%,76.2%,91.4%,83.1%,0.930
+SVM,"{'clf__C': 10, 'clf__kernel': 'rbf'}",99.4%,98.5%,97.2%,100.0%,98.6%,1.000
+DecisionTree,{'clf__max_depth': 10},100.0%,98.5%,100.0%,97.1%,98.6%,0.986
+RandomForest,"{'clf__max_depth': 10, 'clf__n_estimators': 500}",100.0%,100.0%,100.0%,100.0%,100.0%,1.000
+KNN,{'clf__n_neighbors': 3},99.4%,94.6%,93.5%,96.2%,94.8%,0.991

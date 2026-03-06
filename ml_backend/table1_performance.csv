@@ -1,0 +1,6 @@
+Model,Best_Params,Train_Acc,Test_Acc,Precision,Recall,F1,AUC,CV_Acc,CV_Std,Train_Time,Epochs
+LogisticRegression,{'clf__C': 10},84.6%,81.0%,76.2%,91.4%,83.1%,0.930,84.5%,1.6%,29.78s,1000 iterations
+SVM,"{'clf__C': 10, 'clf__kernel': 'rbf'}",99.4%,98.5%,97.2%,100.0%,98.6%,1.000,98.7%,0.8%,4.14s,1000 iterations
+DecisionTree,{'clf__max_depth': 10},100.0%,98.5%,100.0%,97.1%,98.6%,0.986,99.8%,0.4%,1.78s,1 epoch (greedy)
+RandomForest,"{'clf__max_depth': 10, 'clf__n_estimators': 500}",100.0%,100.0%,100.0%,100.0%,100.0%,1.000,100.0%,0.0%,38.82s,500 epochs (trees)
+KNN,{'clf__n_neighbors': 3},99.4%,94.6%,93.5%,96.2%,94.8%,0.991,96.2%,0.8%,2.76s,0 epochs (lazy)
