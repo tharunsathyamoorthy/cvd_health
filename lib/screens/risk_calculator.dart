@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'result_screen.dart';
 import 'package:health/health.dart';
+import 'package:permission_handler/permission_handler.dart'; // ✅ ADDED
 
 class RiskCalculator extends StatefulWidget {
   const RiskCalculator({super.key});
@@ -64,6 +65,9 @@ class _RiskCalculatorState extends State<RiskCalculator> {
 
   // ===================== SMARTWATCH SYNC =====================
   Future<void> syncSmartwatchData() async {
+    // ✅ Request Android activity permission
+    await Permission.activityRecognition.request();
+
     final types = [HealthDataType.STEPS, HealthDataType.HEART_RATE];
 
     bool permission = await health.requestAuthorization(types);
@@ -78,6 +82,13 @@ class _RiskCalculatorState extends State<RiskCalculator> {
         endTime: now,
       );
 
+      List<HealthDataPoint> heartData = await health.getHealthDataFromTypes(
+        types: [HealthDataType.HEART_RATE],
+        startTime: yesterday,
+        endTime: now,
+      );
+
+      // Steps → Activity
       if (stepsData.isNotEmpty) {
         double steps =
             (stepsData.last.value as NumericHealthValue).numericValue
@@ -86,11 +97,23 @@ class _RiskCalculatorState extends State<RiskCalculator> {
         setState(() {
           activity = steps > 5000 ? 1 : 0;
         });
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Steps synced: $steps")));
       }
+
+      // Heart rate → BP estimation
+      if (heartData.isNotEmpty) {
+        double heartRate =
+            (heartData.last.value as NumericHealthValue).numericValue
+                .toDouble();
+
+        setState(() {
+          sysBPController.text = (110 + heartRate * 0.2).toInt().toString();
+          diaBPController.text = (70 + heartRate * 0.1).toInt().toString();
+        });
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Smartwatch data synced")));
     }
   }
 
