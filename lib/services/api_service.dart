@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config.dart';
 
 class ApiService {
   // MUST match Flask IP exactly
-  static const String baseUrl = "http://10.124.198.48:5000";
+  static const String baseUrl = AppConfig.backendUrl;
 
   static Future<Map<String, dynamic>> predict(Map<String, dynamic> data) async {
     final response = await http
