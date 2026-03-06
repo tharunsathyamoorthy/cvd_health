@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'result_screen.dart';
+import 'package:health/health.dart';
 
 class RiskCalculator extends StatefulWidget {
   const RiskCalculator({super.key});
@@ -23,6 +24,8 @@ class _RiskCalculatorState extends State<RiskCalculator> {
   int activity = 1; // 1 = Active, 0 = Inactive
 
   bool isLoading = false;
+
+  Health health = Health();
 
   // ===================== SUBMIT =====================
   Future<void> submitData() async {
@@ -56,6 +59,38 @@ class _RiskCalculatorState extends State<RiskCalculator> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Prediction failed: $e")));
+    }
+  }
+
+  // ===================== SMARTWATCH SYNC =====================
+  Future<void> syncSmartwatchData() async {
+    final types = [HealthDataType.STEPS, HealthDataType.HEART_RATE];
+
+    bool permission = await health.requestAuthorization(types);
+
+    if (permission) {
+      final now = DateTime.now();
+      final yesterday = now.subtract(const Duration(days: 1));
+
+      List<HealthDataPoint> stepsData = await health.getHealthDataFromTypes(
+        types: [HealthDataType.STEPS],
+        startTime: yesterday,
+        endTime: now,
+      );
+
+      if (stepsData.isNotEmpty) {
+        double steps =
+            (stepsData.last.value as NumericHealthValue).numericValue
+                .toDouble();
+
+        setState(() {
+          activity = steps > 5000 ? 1 : 0;
+        });
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Steps synced: $steps")));
+      }
     }
   }
 
@@ -129,7 +164,24 @@ class _RiskCalculatorState extends State<RiskCalculator> {
                       onChanged: (v) => setState(() => activity = v),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: syncSmartwatchData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text("Sync Smartwatch Data"),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
 
                     SizedBox(
                       width: double.infinity,
