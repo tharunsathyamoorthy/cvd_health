@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'result_screen.dart';
-import 'package:health/health.dart';
-import 'package:permission_handler/permission_handler.dart'; // ✅ ADDED
+import 'package:pedometer/pedometer.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class RiskCalculator extends StatefulWidget {
   const RiskCalculator({super.key});
@@ -20,25 +20,22 @@ class _RiskCalculatorState extends State<RiskCalculator> {
   final TextEditingController cholesterolController = TextEditingController();
   final TextEditingController glucoseController = TextEditingController();
 
-  int gender = 1; // 1 = Male, 0 = Female
-  int smoking = 0; // 1 = Yes, 0 = No
-  int activity = 1; // 1 = Active, 0 = Inactive
+  int gender = 1;
+  int smoking = 0;
+  int activity = 1;
 
   bool isLoading = false;
 
-  Health health = Health();
-
-  // ===================== SUBMIT =====================
   Future<void> submitData() async {
     if (!_formKey.currentState!.validate()) return;
 
     final inputData = {
-      "age": int.parse(ageController.text),
+      "age": int.tryParse(ageController.text) ?? 0,
       "gender": gender,
-      "systolic_bp": int.parse(sysBPController.text),
-      "diastolic_bp": int.parse(diaBPController.text),
-      "cholesterol": int.parse(cholesterolController.text),
-      "glucose": int.parse(glucoseController.text),
+      "systolic_bp": int.tryParse(sysBPController.text) ?? 0,
+      "diastolic_bp": int.tryParse(diaBPController.text) ?? 0,
+      "cholesterol": int.tryParse(cholesterolController.text) ?? 0,
+      "glucose": int.tryParse(glucoseController.text) ?? 0,
       "smoking": smoking,
       "activity": activity,
     };
@@ -63,61 +60,42 @@ class _RiskCalculatorState extends State<RiskCalculator> {
     }
   }
 
-  // ===================== SMARTWATCH SYNC =====================
   Future<void> syncSmartwatchData() async {
-    // ✅ Request Android activity permission
     await Permission.activityRecognition.request();
 
-    final types = [HealthDataType.STEPS, HealthDataType.HEART_RATE];
-
-    bool permission = await health.requestAuthorization(types);
-
-    if (permission) {
-      final now = DateTime.now();
-      final yesterday = now.subtract(const Duration(days: 1));
-
-      List<HealthDataPoint> stepsData = await health.getHealthDataFromTypes(
-        types: [HealthDataType.STEPS],
-        startTime: yesterday,
-        endTime: now,
-      );
-
-      List<HealthDataPoint> heartData = await health.getHealthDataFromTypes(
-        types: [HealthDataType.HEART_RATE],
-        startTime: yesterday,
-        endTime: now,
-      );
-
-      // Steps → Activity
-      if (stepsData.isNotEmpty) {
-        double steps =
-            (stepsData.last.value as NumericHealthValue).numericValue
-                .toDouble();
+    try {
+      Pedometer.stepCountStream.listen((StepCount event) {
+        int steps = event.steps;
 
         setState(() {
-          activity = steps > 5000 ? 1 : 0;
+          if (steps > 7000) {
+            activity = 1;
+          } else {
+            activity = 0;
+          }
         });
-      }
+      });
 
-      // Heart rate → BP estimation
-      if (heartData.isNotEmpty) {
-        double heartRate =
-            (heartData.last.value as NumericHealthValue).numericValue
-                .toDouble();
-
-        setState(() {
-          sysBPController.text = (110 + heartRate * 0.2).toInt().toString();
-          diaBPController.text = (70 + heartRate * 0.1).toInt().toString();
-        });
-      }
-
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Steps synced from phone sensor")),
+      );
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Smartwatch data synced")));
+      ).showSnackBar(SnackBar(content: Text("Step sensor not available")));
     }
   }
 
-  // ===================== UI =====================
+  @override
+  void dispose() {
+    ageController.dispose();
+    sysBPController.dispose();
+    diaBPController.dispose();
+    cholesterolController.dispose();
+    glucoseController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,7 +178,7 @@ class _RiskCalculatorState extends State<RiskCalculator> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text("Sync Smartwatch Data"),
+                        child: const Text("Sync Step Data"),
                       ),
                     ),
 
@@ -241,7 +219,6 @@ class _RiskCalculatorState extends State<RiskCalculator> {
     );
   }
 
-  // ===================== COMMON WIDGETS =====================
   Widget buildTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

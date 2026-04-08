@@ -1,6 +1,5 @@
 import pandas as pd
 import pickle
-import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -14,33 +13,39 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
-print("\n CARDIOVASCULAR DISEASE RISK PREDICTION ")
+print("\nCARDIOVASCULAR DISEASE RISK PREDICTION")
 print("=" * 55)
 
 df = pd.read_csv("cardio_train.csv")
 
-string_cols = [
-    "Sex",
-    "Smoking Status",
-    "Physical Activity Level",
-    "CVD Risk Level"
-]
+string_cols = ["Sex", "Smoking Status", "Physical Activity Level", "CVD Risk Level"]
 
 for col in string_cols:
     df[col] = df[col].astype(str).str.strip().str.lower()
 
+df["Smoking Status"] = df["Smoking Status"].replace(["nan", "none"], "no")
+df["Physical Activity Level"] = df["Physical Activity Level"].replace(["nan", "none"], "medium")
+
 df["Sex"] = df["Sex"].map({"m": 1, "f": 0})
 df["Smoking Status"] = df["Smoking Status"].map({"yes": 1, "no": 0})
 df["Physical Activity Level"] = df["Physical Activity Level"].map({
-    "low": 0, "medium": 1, "high": 2
+    "low": 0,
+    "medium": 1,
+    "high": 2
 })
 
 df["CVD Risk Level"] = df["CVD Risk Level"].map({
-    "low": 0, "low risk": 0, "moderate": 0,
-    "medium": 0, "medium risk": 0,
-    "high": 1, "high risk": 1,
-    "very high": 1, "very high risk": 1
+    "low": 0,
+    "low risk": 0,
+    "moderate": 0,
+    "medium": 0,
+    "medium risk": 0,
+    "high": 1,
+    "high risk": 1,
+    "very high": 1,
+    "very high risk": 1
 })
+
 
 feature_cols = [
     "Age",
@@ -53,8 +58,8 @@ feature_cols = [
     "Physical Activity Level"
 ]
 
-X = df[feature_cols].apply(pd.to_numeric, errors="coerce")
-y = pd.to_numeric(df["CVD Risk Level"], errors="coerce")
+X = df[feature_cols]
+y = df["CVD Risk Level"]
 
 mask = y.notna()
 X = X[mask]
@@ -64,6 +69,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
+
 models = {
     "Logistic Regression": LogisticRegression(max_iter=1000),
     "Support Vector Machine": SVC(probability=True),
@@ -72,14 +78,16 @@ models = {
     "K-Nearest Neighbor": KNeighborsClassifier(n_neighbors=5)
 }
 
+results = []
+
 best_model = None
 best_model_name = None
-best_f1 = 0
 best_accuracy = 0
+best_f1 = 0
 best_auc = 0
 
+
 for name, clf in models.items():
-    print(f"\nTraining {name}...")
 
     pipe = Pipeline([
         ("imputer", SimpleImputer(strategy="median")),
@@ -96,16 +104,26 @@ for name, clf in models.items():
     f1 = f1_score(y_test, y_pred)
     auc = roc_auc_score(y_test, y_prob)
 
-    print(" Accuracy:", acc)
-    print(" F1:", f1)
-    print(" AUC:", auc)
+    results.append({
+        "Model": name,
+        "Accuracy": round(acc, 4),
+        "F1 Score": round(f1, 4),
+        "AUC": round(auc, 4)
+    })
 
-    if f1 > best_f1:
+    if acc > best_accuracy:
         best_model = pipe
         best_model_name = name
-        best_f1 = f1
         best_accuracy = acc
+        best_f1 = f1
         best_auc = auc
+
+
+results_df = pd.DataFrame(results)
+
+print("\nModel Performance Table\n")
+print(results_df)
+
 
 with open("model.pkl", "wb") as f:
     pickle.dump(best_model.named_steps["clf"], f)
@@ -126,4 +144,5 @@ best_model_info = {
 with open("best_model_info.pkl", "wb") as f:
     pickle.dump(best_model_info, f)
 
-print("\n ✅ Best Model Selected:", best_model_name)
+print("\nBest Model Selected:", best_model_name)
+print("Accuracy:", round(best_accuracy, 4))

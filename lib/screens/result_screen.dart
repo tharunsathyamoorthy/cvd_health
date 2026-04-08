@@ -7,9 +7,22 @@ class ResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prediction = result["prediction"] ?? "N/A";
-    final probability = result["risk_probability"] ?? 0;
-    final accuracy = result["model_accuracy"] ?? 0;
+
+    final probability =
+        double.tryParse(result["risk_probability"].toString()) ?? 0;
+    final accuracy = double.tryParse(result["model_accuracy"].toString()) ?? 0;
+
     final bestModel = result["best_model"] ?? "N/A";
+
+    Color riskColor;
+
+    if (prediction.toString().toLowerCase().contains("high")) {
+      riskColor = Colors.red;
+    } else if (prediction.toString().toLowerCase().contains("some")) {
+      riskColor = Colors.orange;
+    } else {
+      riskColor = Colors.green;
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -45,10 +58,7 @@ class ResultScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color:
-                            prediction.toString().toLowerCase().contains("high")
-                                ? Colors.red
-                                : Colors.green,
+                        color: riskColor,
                       ),
                     ),
                   ),
@@ -65,9 +75,15 @@ class ResultScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
-                        prediction.toString(),
-                        style: const TextStyle(fontSize: 16),
+                      Flexible(
+                        child: Text(
+                          prediction.toString(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: riskColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -85,7 +101,7 @@ class ResultScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "$probability%",
+                        "${probability.toStringAsFixed(2)} %",
                         style: const TextStyle(fontSize: 16),
                       ),
                     ],
@@ -104,7 +120,7 @@ class ResultScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "$accuracy%",
+                        "${accuracy.toStringAsFixed(2)} %",
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.grey,
@@ -119,6 +135,7 @@ class ResultScreen extends StatelessWidget {
                     "Best Model Used",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
+
                   const SizedBox(height: 6),
 
                   Text(

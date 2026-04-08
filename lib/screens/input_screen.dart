@@ -8,6 +8,8 @@ import 'how_to_use_screen.dart';
 import 'ten_year_risk_calculator_screen.dart';
 import 'resources_screen.dart';
 import 'about_cvd_screen.dart';
+import 'chatbot_screen.dart'; // ✅ ADDED IMPORT
+import 'contact_screen.dart'; // ✅ NEW IMPORT
 
 // ===================== DRAWER ITEM =====================
 Widget _drawerItem({
@@ -151,7 +153,6 @@ class _InputScreenState extends State<InputScreen> {
               },
             ),
 
-            // ✅ RESOURCES INTEGRATED
             _drawerItem(
               icon: Icons.menu_book_outlined,
               title: 'Resources',
@@ -179,11 +180,18 @@ class _InputScreenState extends State<InputScreen> {
                 );
               },
             ),
+
             _drawerItem(
               icon: Icons.send_outlined,
               title: 'Contact us',
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ContactScreen(),
+                  ),
+                );
               },
             ),
 
@@ -219,6 +227,18 @@ class _InputScreenState extends State<InputScreen> {
         ),
         title: const Text('Home'),
         centerTitle: true,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+              );
+            },
+          ),
+        ],
       ),
 
       // ===================== BODY =====================
@@ -231,37 +251,48 @@ class _InputScreenState extends State<InputScreen> {
               children: [
                 const SizedBox(height: 12),
 
+                // ✅ ONLY CHANGE: CLICKABLE FEEDBACK BANNER
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      image: const DecorationImage(
-                        fit: BoxFit.cover,
-                        image: AssetImage('assets/images/hero_feedback.jpg'),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ContactScreen(),
                         ),
-                      ],
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          'Give us your\nfeedback',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            shadows: [
-                              Shadow(blurRadius: 6, color: Colors.black45),
-                            ],
+                      );
+                    },
+                    child: Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: const DecorationImage(
+                          fit: BoxFit.cover,
+                          image: AssetImage('assets/images/hero_feedback.jpg'),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: Text(
+                            'Give us your\nfeedback',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              shadows: [
+                                Shadow(blurRadius: 6, color: Colors.black45),
+                              ],
+                            ),
                           ),
                         ),
                       ),
